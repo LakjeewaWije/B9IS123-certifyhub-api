@@ -39,7 +39,39 @@ app.post('/login', async (req, res) => {
         var errorCode = error.code;
         var errorMessage = error.message;
       });
-    
+
+  } catch (error) {
+    res.status(500).send(error);
+  }
+
+});
+
+app.post('/signup', async (req, res) => {
+  const { email, password, firstName, lastName } = req.body;
+  try {
+
+    // Check if email already exists inside the details object
+    const snapshot = await admin.database().ref('users').orderByChild('details/email').equalTo(email).once('value');
+    if (snapshot.exists())
+      return res.status(400).send({ error: 'Email already exists' });
+
+
+    // Generate a unique ID for the user
+    const newUserRef = db.ref('users').push();
+    const userId = newUserRef.key;
+
+    // Save user details in the database
+    await newUserRef.set({
+      details: {
+        firstName,
+        lastName,
+        email,
+        password,
+      }
+    });
+
+    res.status(200).send({ userId });
+
   } catch (error) {
     res.status(500).send(error);
   }
