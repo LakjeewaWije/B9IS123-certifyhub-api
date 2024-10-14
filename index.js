@@ -4,6 +4,7 @@ const app = express()
 const port = 3000
 
 const serviceAccount = require("./serviceAccountKey.json");
+const bodyParser = require('body-parser');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -23,6 +24,27 @@ app.get('/add', (req, res) => {
   });
   res.send('added')
 })
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    firebase.auth().signInWithEmailAndPassword(email, password)
+      .then((userCredential) => {
+        // Signed in
+        var user = userCredential.user;
+        res.json({ user: user });
+        // ...
+      })
+      .catch((error) => {
+        var errorCode = error.code;
+        var errorMessage = error.message;
+      });
+    
+  } catch (error) {
+    res.status(500).send(error);
+  }
+
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
