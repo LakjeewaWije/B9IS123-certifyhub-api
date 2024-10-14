@@ -5,6 +5,7 @@ const port = 3000
 
 const serviceAccount = require("./serviceAccountKey.json");
 const bodyParser = require('body-parser');
+app.use(bodyParser.json());
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -28,18 +29,25 @@ app.get('/add', (req, res) => {
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    firebase.auth().signInWithEmailAndPassword(email, password)
-      .then((userCredential) => {
-        // Signed in
-        var user = userCredential.user;
-        res.json({ user: user });
-        // ...
-      })
-      .catch((error) => {
-        var errorCode = error.code;
-        var errorMessage = error.message;
+    // Query to find user with matching email
+    const snapshot = await admin.database().ref('users').orderByChild('details/email').equalTo(email).once('value');
+
+    if (snapshot.exists()) {
+      // Loop through the matching records to find the one with the correct password
+      snapshot.forEach(userSnapshot => {
+
+        const user = userSnapshot.val();
+        if (user.details.password === password) {
+          res.status(200).send({ message: 'Login successful', data: { userId: userSnapshot.key } });
+          return;
+        }
       });
 
+      // If no matching password is found
+      res.status(400).send({ error: 'Invalid password' });
+    } else {
+      res.status(400).send({ error: 'Email not found' });
+    }
   } catch (error) {
     res.status(500).send(error);
   }
@@ -70,7 +78,7 @@ app.post('/signup', async (req, res) => {
       }
     });
 
-    res.status(200).send({ userId });
+    res.status(200).send({ message: 'Login successful', data: { userId } });
 
   } catch (error) {
     res.status(500).send(error);
