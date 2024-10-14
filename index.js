@@ -37,21 +37,20 @@ app.post('/login', async (req, res) => {
       snapshot.forEach(userSnapshot => {
 
         const user = userSnapshot.val();
+        // check if password match
         if (user.details.password === password) {
           res.status(200).send({ message: 'Login successful', data: { userId: userSnapshot.key } });
-          return;
+        } else {
+          res.status(400).send({ error: 'Invalid password' });
         }
       });
 
-      // If no matching password is found
-      res.status(400).send({ error: 'Invalid password' });
     } else {
       res.status(400).send({ error: 'Email not found' });
     }
   } catch (error) {
     res.status(500).send(error);
   }
-
 });
 
 app.post('/signup', async (req, res) => {
