@@ -27,6 +27,18 @@ const bucket = admin.storage().bucket();
 // setup multer to cache file in memory without saving it locally
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Middleware to check if userId is available in the header for specific routes
+const checkUserId = (req, res, next) => {
+  if (req.path !== '/login' && req.path !== '/signup') {
+    if (!req.headers.userid) {
+      return res.status(400).send({ error: 'UserId is required' });
+    }
+  }
+  next();
+};
+
+app.use(checkUserId);
+
 app.get('/', (req, res) => {
   res.send('Hello World!!!')
 })
