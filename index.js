@@ -98,6 +98,39 @@ app.post('/signup', async (req, res) => {
 
 });
 
+app.post('/create', upload.single('uploaded_file'), async function (req, res) {
+  try {
+    // req.file is the name of your file in the form above, here 'uploaded_file'
+    // req.body will hold the text fields, if there were any 
+    console.log(req.file, req.body);
+    const file = req.file.buffer;
+    const originalName = req.file.originalname; // Or generate a unique filename if needed
+
+    const extension = originalName.split('.').pop(); // Get file extension
+
+    // Generate a unique filename with UUID and timestamp
+    const timestamp = Date.now();
+    const fileName = `${uuidv4()}-${timestamp}.${extension}`;
+
+    const fileRef = bucket.file(fileName);
+
+    // upload the file to storage bucket
+    await fileRef.save(file, {
+      metadata: {
+        contentType: 'application/pdf', // content type of the file
+      }
+    });
+
+    // Generate a public URL for the uploaded file
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${fileRef.name}?alt=media`;
+
+    res.status(200).send({ message: 'File upload successful', data: { publicUrl } });
+  } catch (error) {
+    console.log("error ", error)
+    res.status(500).send(error);
+  }
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
