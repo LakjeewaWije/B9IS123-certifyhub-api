@@ -1,18 +1,31 @@
 const express = require('express')
 const admin = require('firebase-admin');
-const app = express()
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+
+const app = express();
 const port = 3000
 
-const serviceAccount = require("./serviceAccountKey.json");
+// allow to read request body
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 
+// initialize firebase
+const serviceAccount = require("./serviceAccountKey.json");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://b9is123-certifyhub-default-rtdb.europe-west1.firebasedatabase.app/'
+  databaseURL: 'https://b9is123-certifyhub-default-rtdb.europe-west1.firebasedatabase.app/',
+  storageBucket: 'gs://b9is123-certifyhub.appspot.com'
 });
 
+// get an instance of firebase database
 const db = admin.database();
+
+// get an instance of storage bucket
+const bucket = admin.storage().bucket();
+
+// setup multer to cache file in memory without saving it locally
+const upload = multer({ storage: multer.memoryStorage() });
 
 app.get('/', (req, res) => {
   res.send('Hello World!!!')
