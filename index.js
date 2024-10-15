@@ -136,6 +136,7 @@ app.post('/create', upload.single('uploaded_file'), async function (req, res) {
     // Generate a public URL for the uploaded file
     const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${fileRef.name}?alt=media`;
 
+    // todo save the certificate with details , name , description, category, and file url
     res.status(200).send({ message: 'File upload successful', data: { publicUrl } });
   } catch (error) {
     console.log("error ", error)
