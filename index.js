@@ -155,6 +155,32 @@ app.post('/create', upload.single('uploaded_file'), async function (req, res) {
   }
 });
 
+app.get('/certificate/get/all', async (req, res) => {
+  const userId = req.headers.userid;
+  try {
+    // Query to find certificates per user id
+    const snapshot = await admin.database().ref(`users/${userId}/certificates`).once('value');
+    res.status(200).send({ message: 'Certificates fetched', data: snapshot.val() });
+
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+app.get('/certificate/:certificateId/get', async (req, res) => {
+  const userId = req.headers.userid;
+  const certificateId = req.params.certificateId;
+  try {
+    // Query to find certificate with id
+    const snapshot = await admin.database().ref(`users/${userId}/certificates/${certificateId}`).once('value');
+
+    res.status(200).send({ message: 'Certificate fetched', data: snapshot.val() });
+
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
