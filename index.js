@@ -29,7 +29,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Middleware to check if userId is available in the header for specific routes
 const checkUserId = (req, res, next) => {
-  if (req.path !== '/login' && req.path !== '/signup') {
+  if (req.path !== '/login' && req.path !== '/signup' && req.path !== '/') {
     if (!req.headers.userid) {
       return res.status(400).send({ error: 'UserId is required' });
     }
@@ -95,6 +95,7 @@ app.post('/signup', async (req, res) => {
     // Save user details in the database
     await newUserRef.set({
       details: {
+        userId,
         firstName,
         lastName,
         email,
@@ -136,7 +137,17 @@ app.post('/create', upload.single('uploaded_file'), async function (req, res) {
     // Generate a public URL for the uploaded file
     const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${fileRef.name}?alt=media`;
 
-    // todo save the certificate with details , name , description, category, and file url
+    // Generate a unique ID for the certificate
+    const newCertRef = db.ref(`users/${req.headers.userid}/certificates`).push();
+    const certificateId = newCertRef.key;
+
+    // Save certificate details in the database
+    await newCertRef.set({
+      ...req.body,
+      certificateId,
+      fileUrl: publicUrl
+    });
+
     res.status(200).send({ message: 'File upload successful', data: { publicUrl } });
   } catch (error) {
     console.log("error ", error)
