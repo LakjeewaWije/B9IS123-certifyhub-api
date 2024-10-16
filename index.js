@@ -103,7 +103,7 @@ app.post('/signup', async (req, res) => {
       }
     });
 
-    res.status(200).send({ message: 'Login successful', data: { userId } });
+    res.status(200).send({ message: 'SignUp successful', data: { userId } });
 
   } catch (error) {
     res.status(500).send(error);
@@ -148,7 +148,7 @@ app.post('/create', upload.single('uploaded_file'), async function (req, res) {
       fileUrl: publicUrl
     });
 
-    res.status(200).send({ message: 'File upload successful', data: { publicUrl } });
+    res.status(200).send({ message: 'Certificate Added', data: { publicUrl } });
   } catch (error) {
     console.log("error ", error)
     res.status(500).send(error);
