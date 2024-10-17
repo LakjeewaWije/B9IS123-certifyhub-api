@@ -1,6 +1,7 @@
 const express = require('express')
 const admin = require('firebase-admin');
 const multer = require('multer');
+const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
@@ -9,6 +10,7 @@ const port = 3000
 // allow to read request body
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
+app.use(cors());
 
 // initialize firebase
 const serviceAccount = require("./serviceAccountKey.json");
