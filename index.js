@@ -167,7 +167,12 @@ app.get('/certificate/get/all', async (req, res) => {
   try {
     // Query to find certificates per user id
     const snapshot = await admin.database().ref(`users/${userId}/certificates`).once('value');
-    return res.status(200).send({ message: 'Certificates fetched', data: snapshot.val() });
+
+    const tempArray = []
+    snapshot.forEach((data) => {
+      tempArray.push(data.val());
+    })
+    return res.status(200).send({ message: 'Certificates fetched', data: tempArray });
 
   } catch (error) {
     return res.status(500).send(error);
