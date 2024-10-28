@@ -115,9 +115,29 @@ app.post('/signup', async (req, res) => {
 
 });
 
+// get all categories
+app.get('/categories/get/all', async (req, res) => {
+  const userId = req.headers.userid;
+  try {
+    // Query to find categories
+    const snapshot = await admin.database().ref(`/categories`).once('value');
+
+    const tempArray = []
+    snapshot.forEach((data) => {
+      tempArray.push(data.val());
+    })
+    return res.status(200).send({ message: 'Categories fetched', data: tempArray });
+
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+});
+
+
 // add certificate
 app.post('/certificate/add', upload.single('uploaded_file'), async function (req, res) {
   try {
+    const userId = req.headers.userid;
     // req.file is the name of your file in the form above, here 'uploaded_file'
     // req.body will hold the text fields, if there were any 
     console.log(req.file, req.body);
@@ -143,7 +163,7 @@ app.post('/certificate/add', upload.single('uploaded_file'), async function (req
     const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${fileRef.name}?alt=media`;
 
     // Generate a unique ID for the certificate
-    const newCertRef = db.ref(`users/${req.headers.userid}/certificates`).push();
+    const newCertRef = db.ref(`users/${userId}/certificates`).push();
     const certificateId = newCertRef.key;
 
     // Save certificate details in the database
@@ -155,6 +175,60 @@ app.post('/certificate/add', upload.single('uploaded_file'), async function (req
     });
 
     return res.status(200).send({ message: 'Certificate Added', data: { publicUrl } });
+  } catch (error) {
+    console.log("error ", error)
+    return res.status(500).send(error);
+  }
+});
+
+// update certificate
+app.put('/certificate/update', upload.single('uploaded_file'), async function (req, res) {
+  try {
+    const userId = req.headers.userid;
+    // req.file is the name of your file in the form above, here 'uploaded_file'
+    // req.body will hold the text fields, if there were any 
+    console.log(req.file, req.body, "req.headers " + req.headers.userid);
+    var publicUrl;
+    var fileName;
+    if (req.file) {
+      const file = req.file.buffer;
+      const originalName = req.file.originalname; // Or generate a unique filename if needed
+      const extension = originalName.split('.').pop(); // Get file extension
+
+      // Generate a unique filename with UUID and timestamp
+      const timestamp = Date.now();
+      fileName = `${uuidv4()}-${timestamp}.${extension}`;
+      const fileRef = bucket.file(fileName);
+      // upload the file to storage bucket
+      await fileRef.save(file, {
+        metadata: {
+          contentType: 'application/pdf', // content type of the file
+        }
+      });
+      // Generate a public URL for the uploaded file
+      publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${fileRef.name}?alt=media`;
+      console.log("sfdsffsdfffsdfsf")
+      // remove old fiile from storage
+      const fileRefNew = bucket.file(req.body.fileName);
+      await fileRefNew.delete();
+    }
+
+    // Get reference to the certificate with id
+    const reference = admin.database().ref(`users/${userId}/certificates/${req.body.certificateId}`);
+    // Query to find certificate with id
+    const snapshot = await admin.database().ref(`users/${userId}/certificates/${req.body.certificateId}`).once('value');
+    const existingCertificate = await snapshot.val();
+    // Save certificate details in the database
+    await reference.update({
+      name: req.body.name ?? existingCertificate.name,
+      dateAwarded: req.body.dateAwarded ?? existingCertificate.dateAwarded,
+      description: req.body.description ?? existingCertificate.description,
+      category: req.body.category ?? existingCertificate.category,
+      fileUrl: req.file ? publicUrl : existingCertificate.fileUrl,
+      fileName: req.file ? fileName : existingCertificate.fileName
+    });
+
+    return res.status(200).send({ message: 'Certificate Updated', data: { publicUrl } });
   } catch (error) {
     console.log("error ", error)
     return res.status(500).send(error);
