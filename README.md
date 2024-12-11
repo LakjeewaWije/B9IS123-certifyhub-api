@@ -9,5 +9,17 @@ Everything you do here is contained within this one codespace. There is no repos
 To run this application:
 
 ```
+git clone https://github.com/LakjeewaWije/B9IS123-certifyhub-api.git
+```
+
+```
+cd B9IS123-certifyhub-api
+```
+
+```
+npm i
+```
+
+```
 npm start
 ```

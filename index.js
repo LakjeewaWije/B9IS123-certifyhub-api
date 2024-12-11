@@ -10,6 +10,8 @@ const port = 3000
 // allow to read request body
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
+
+// allow cors
 app.use(cors());
 
 // initialize firebase
@@ -31,7 +33,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Middleware to check if userId is available in the header for specific routes
 const checkUserId = (req, res, next) => {
-  if (req.path !== '/login' && req.path !== '/signup' && req.path !== '/') {
+  if (req.path !== '/login' && req.path !== '/signup' && req.path !== '/' && req.path !== '/certificate/get/all/user') {
     if (!req.headers.userid) {
       return res.status(400).send({ error: 'UserId is required' });
     }
@@ -39,18 +41,12 @@ const checkUserId = (req, res, next) => {
   next();
 };
 
+// register middleware which checks for userId
 app.use(checkUserId);
 
+// default route
 app.get('/', (req, res) => {
-  res.send('Hello World!!!')
-})
-
-app.get('/add', (req, res) => {
-  db.ref('/user/sfasdfsf').set({
-    key1: 'value1',
-    key2: 'value2'
-  });
-  return res.send('added')
+  res.send('CertifyHub Api Up And Running...')
 })
 
 // login user
@@ -115,6 +111,20 @@ app.post('/signup', async (req, res) => {
 
 });
 
+// get single user
+app.get('/user/get', async (req, res) => {
+  const userId = req.headers.userid;
+  try {
+    // Query to find user details with user id
+    const snapshot = await admin.database().ref(`users/${userId}/details`).once('value');
+
+    return res.status(200).send({ message: 'User details fetched', data: snapshot.val() });
+
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+});
+
 // get all categories
 app.get('/categories/get/all', async (req, res) => {
   const userId = req.headers.userid;
@@ -133,14 +143,11 @@ app.get('/categories/get/all', async (req, res) => {
   }
 });
 
-
 // add certificate
 app.post('/certificate/add', upload.single('uploaded_file'), async function (req, res) {
   try {
     const userId = req.headers.userid;
-    // req.file is the name of your file in the form above, here 'uploaded_file'
-    // req.body will hold the text fields, if there were any 
-    console.log(req.file, req.body);
+
     const file = req.file.buffer;
     const originalName = req.file.originalname; // Or generate a unique filename if needed
 
@@ -176,7 +183,6 @@ app.post('/certificate/add', upload.single('uploaded_file'), async function (req
 
     return res.status(200).send({ message: 'Certificate Added', data: { publicUrl } });
   } catch (error) {
-    console.log("error ", error)
     return res.status(500).send(error);
   }
 });
@@ -185,9 +191,6 @@ app.post('/certificate/add', upload.single('uploaded_file'), async function (req
 app.put('/certificate/update', upload.single('uploaded_file'), async function (req, res) {
   try {
     const userId = req.headers.userid;
-    // req.file is the name of your file in the form above, here 'uploaded_file'
-    // req.body will hold the text fields, if there were any 
-    console.log(req.file, req.body, "req.headers " + req.headers.userid);
     var publicUrl;
     var fileName;
     if (req.file) {
@@ -207,7 +210,7 @@ app.put('/certificate/update', upload.single('uploaded_file'), async function (r
       });
       // Generate a public URL for the uploaded file
       publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${fileRef.name}?alt=media`;
-      console.log("sfdsffsdfffsdfsf")
+
       // remove old fiile from storage
       const fileRefNew = bucket.file(req.body.fileName);
       await fileRefNew.delete();
@@ -230,12 +233,11 @@ app.put('/certificate/update', upload.single('uploaded_file'), async function (r
 
     return res.status(200).send({ message: 'Certificate Updated', data: { publicUrl } });
   } catch (error) {
-    console.log("error ", error)
     return res.status(500).send(error);
   }
 });
 
-// get all certificates per user by user
+// get all certificates per user by userId
 app.get('/certificate/get/all', async (req, res) => {
   const userId = req.headers.userid;
   try {
@@ -287,11 +289,28 @@ app.delete('/certificate/:certificateId/remove', async (req, res) => {
     return res.status(200).send({ message: 'Certificate removed', data: null });
 
   } catch (error) {
-    console.log("errr ", error)
+    return res.status(500).send(error);
+  }
+});
+
+// public route to get certificates belongs to relevant user
+app.get('/certificate/get/all/user', async (req, res) => {
+  const userId = req.query.userId;
+  try {
+    // Query to find certificates per user id
+    const snapshot = await admin.database().ref(`users/${userId}/certificates`).once('value');
+
+    const tempArray = []
+    snapshot.forEach((data) => {
+      tempArray.push(data.val());
+    })
+    return res.status(200).send({ message: 'Certificates fetched', data: tempArray });
+
+  } catch (error) {
     return res.status(500).send(error);
   }
 });
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+  console.log(`CertifyHub API listening on port ${port}`)
+});
