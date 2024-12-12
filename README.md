@@ -29,6 +29,15 @@ npm run test
 
 https://certihub.uksouth.cloudapp.azure.com/
 
+## References
+
+https://expressjs.com/en/starter/hello-world.html
+https://medium.com/@skhans/building-a-restful-api-with-express-js-a-beginners-guide-dcb1a1e3520d
+https://www.npmjs.com/package/multer
+https://www.npmjs.com/package/firebase-admin
+https://firebase.google.com/docs/database/admin/start
+https://medium.com/@it.ermias.asmare/node-js-express-with-jest-and-supertest-e58aaf4c4514
+
 # GitHub Codespaces ♥️ Express
 
 Welcome to your shiny new Codespace running Express! We've got everything fired up and running for you to explore Express.
