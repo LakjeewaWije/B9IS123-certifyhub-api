@@ -314,3 +314,6 @@ app.get('/certificate/get/all/user', async (req, res) => {
 app.listen(port, () => {
   console.log(`CertifyHub API listening on port ${port}`)
 });
+
+
+module.exports = app;
